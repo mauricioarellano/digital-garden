@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  json-editor:
+    image: djmattyg007/jsoneditor
+    container_name: json-editor
+    networks:
+      - dev-tools-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.json-editor.rule=Host(`json-editor.tools`, `json-editor.local`, `json-editor.dev`)"
+      - "traefik.http.services.json-editor.loadbalancer.server.port=80"
+
+  swagger-editor:
+    image: swaggerapi/swagger-editor
+    container_name: swagger-editor
+    networks:
+      - dev-tools-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.swagger-editor.rule=Host(`swagger-editor.tools`, `swagger-editor.local`, `swagger-editor.dev`)"
+      - "traefik.http.services.swagger-editor.loadbalancer.server.port=8080"
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - dev-tools-net
+
+networks:
+  dev-tools-net:
+    driver: bridge
