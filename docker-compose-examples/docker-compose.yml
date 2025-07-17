@@ -1,0 +1,71 @@
+# Docker Compose configuration for myapp project
+# Services: Node.js application, MySQL database, and Adminer for DB management
+version: '3.8'
+
+services:
+  # Main application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: myapp-app
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    environment:
+      - NODE_ENV=development
+      - DATABASE_HOST=database # References the database service name
+      - DATABASE_USER=${DATABASE_USER:-myapp_user}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-myapp_password}
+      - DATABASE_NAME=${DATABASE_NAME:-myapp_db}
+    volumes:
+      - .:/usr/src/app # Mount current directory for development
+      - /usr/src/app/node_modules # Anonymous volume for node_modules
+    depends_on:
+      - database
+    restart: unless-stopped
+    networks:
+      - myapp-network
+
+  # MySQL Database service
+  database:
+    image: mysql:8.4
+    container_name: myapp-database
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD:-root_password}
+      - MYSQL_DATABASE=${DATABASE_NAME:-myapp_db}
+      - MYSQL_USER=${DATABASE_USER:-myapp_user}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD:-myapp_password}
+    volumes:
+      - mysql-data:/var/lib/mysql # Persistent data storage
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Mount initialization script
+    ports:
+      - '${DATABASE_PORT:-3306}:3306' # Exposed for local development
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - myapp-network
+
+  # Database management interface
+  dbadmin:
+    image: adminer:latest
+    container_name: myapp-dbadmin
+    ports:
+      - '${ADMIN_PORT:-8080}:8080'
+    depends_on:
+      - database
+    networks:
+      - myapp-network
+
+# Persistent volume definitions
+volumes:
+  mysql-data:
+    name: myapp-mysql-data
+
+# Network definition for service isolation
+networks:
+  myapp-network:
+    name: myapp-network
+    driver: bridge
