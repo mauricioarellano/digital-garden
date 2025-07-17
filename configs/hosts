@@ -1,0 +1,9 @@
+# Local Computer Network alias for /etc/hosts
+
+# Developer tools
+127.0.0.1   json-editor.tools
+127.0.0.1   json-editor.local
+127.0.0.1   json-editor.dev
+127.0.0.1   swagger-editor.tools
+127.0.0.1   swagger-editor.local
+127.0.0.1   swagger-editor.dev 
